@@ -26,8 +26,8 @@ import android.widget.TextView;
 public class UCLinear extends RelativeLayout{
 	private static int CONTENT_ORI_TOP_LOC;
 	
-	private boolean isInRange = true;
-	public boolean isOrigin = true;
+	private boolean isInRange = true; 
+	public boolean isOrigin = true; //是否是初始状态,用于返回判断
 	
 	private ViewDragHelper mDragHelper;
 	private DragHelperCallback mCallBack;
@@ -46,11 +46,8 @@ public class UCLinear extends RelativeLayout{
 	private View mViewContent; //内容
 	private View mViewBottom;//底部导航
 	
-	private TextView tv_in_Search ;
-	
 	//bottom中的五个button
 	private Button btnPrev,btnNext,btnMore,btnPage,btnToHome;
-	private float btnPrev_dis,btnNext_dis,btnPage_dis,btnToHome_dis;
 
 	public UCLinear(Context context, AttributeSet attrs) {
 		super(context, attrs);
@@ -72,14 +69,7 @@ public class UCLinear extends RelativeLayout{
 			}
 		});
 	}
-	
-	public void initButton(){
-		btnPrev = (Button) findViewById(R.id.btnPrev);
-		btnNext = (Button) findViewById(R.id.btnNext);
-		btnMore = (Button) findViewById(R.id.btnMore);
-		btnPage = (Button) findViewById(R.id.btnPage);
-		btnToHome = (Button) findViewById(R.id.btnToHome);
-	}
+
 	public void setBackToOrigin(){
 		if (!isOrigin){
 			isInRange = true;
@@ -99,12 +89,10 @@ public class UCLinear extends RelativeLayout{
 			btnPrev_ta.setAnimationListener(new AnimationListener() {
 				
 				@Override
-				public void onAnimationStart(Animation animation) {
-					// TODO Auto-generated method stub					
+				public void onAnimationStart(Animation animation) {				
 				}			
 				@Override
-				public void onAnimationRepeat(Animation animation) {
-					// TODO Auto-generated method stub				
+				public void onAnimationRepeat(Animation animation) {				
 				}
 				
 				@Override
@@ -124,19 +112,14 @@ public class UCLinear extends RelativeLayout{
 				
 				@Override
 				public void onAnimationStart(Animation animation) {
-					// TODO Auto-generated method stub
-					
 				}
 				
 				@Override
 				public void onAnimationRepeat(Animation animation) {
-					// TODO Auto-generated method stub
-					
 				}
 				
 				@Override
 				public void onAnimationEnd(Animation animation) {
-					// TODO Auto-generated method stub
 					btnNext.setTranslationX(0);
 					btnNext.clearAnimation();
 				}
@@ -151,19 +134,16 @@ public class UCLinear extends RelativeLayout{
 				
 				@Override
 				public void onAnimationStart(Animation animation) {
-					// TODO Auto-generated method stub
 					
 				}
 				
 				@Override
 				public void onAnimationRepeat(Animation animation) {
-					// TODO Auto-generated method stub
 					
 				}
 				
 				@Override
 				public void onAnimationEnd(Animation animation) {
-					// TODO Auto-generated method stub
 					btnPage.setTranslationX(0);
 					btnPage.clearAnimation();
 				}
@@ -176,19 +156,16 @@ public class UCLinear extends RelativeLayout{
 				
 				@Override
 				public void onAnimationStart(Animation animation) {
-					// TODO Auto-generated method stub
 					
 				}
 				
 				@Override
 				public void onAnimationRepeat(Animation animation) {
-					// TODO Auto-generated method stub
 					
 				}
 				
 				@Override
 				public void onAnimationEnd(Animation animation) {
-					// TODO Auto-generated method stub
 					btnToHome.setTranslationX(0);
 					btnToHome.clearAnimation();
 				}
@@ -231,7 +208,7 @@ public class UCLinear extends RelativeLayout{
 				return true;
 			}
 		}
-		return mDragHelper.shouldInterceptTouchEvent(ev) && isInRange;
+		return mDragHelper.shouldInterceptTouchEvent(ev);
 	}
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
@@ -264,7 +241,17 @@ public class UCLinear extends RelativeLayout{
 				0, 
 				mViewWebGuide.getMeasuredHeight()+mViewSearch.getMeasuredHeight(), 
 				mViewContent.getMeasuredWidth(),
-				mViewWebGuide.getMeasuredHeight()+mViewSearch.getMeasuredHeight()+getMeasuredHeight()-mViewGuide.getMeasuredHeight()-mViewBottom.getMeasuredHeight());
+				mViewWebGuide.getMeasuredHeight()+mViewSearch.getMeasuredHeight()+
+							getMeasuredHeight()-mViewGuide.getMeasuredHeight()-
+							mViewBottom.getMeasuredHeight());
+	}
+	
+	public void initButton(){
+		btnPrev = (Button) findViewById(R.id.btnPrev);
+		btnNext = (Button) findViewById(R.id.btnNext);
+		btnMore = (Button) findViewById(R.id.btnMore);
+		btnPage = (Button) findViewById(R.id.btnPage);
+		btnToHome = (Button) findViewById(R.id.btnToHome);
 	}
 	@Override
 	protected void onFinishInflate() {
@@ -280,6 +267,9 @@ public class UCLinear extends RelativeLayout{
 	
 	class DragHelperCallback extends ViewDragHelper.Callback {
 
+		/**
+		 * 设置mViewContent可拖拽
+		 */
 		@Override
 		public boolean tryCaptureView(View arg0, int arg1) {
 			if (mDragHelper.continueSettling(true))
@@ -287,7 +277,7 @@ public class UCLinear extends RelativeLayout{
 			return mViewContent == arg0 && isInRange;
 		}
 		/**
-		 * 重新定义垂直移动的位置
+		 * 垂直拖拽的处理，这里对拖拽过程中mViewContent的移动进行处理
 		 */
 		@Override
 		public int clampViewPositionVertical(View child, int top, int dy) {
@@ -296,21 +286,30 @@ public class UCLinear extends RelativeLayout{
 			int newTop = Math.min(Math.max(top, topBound), bottomBound);		
 			return newTop;
 		}
+		/**
+		 * 水平拖拽的处理
+		 */
 		@Override
 		public int clampViewPositionHorizontal(View child, int left, int dx) {
-			// TODO Auto-generated method stub
 			return super.clampViewPositionHorizontal(child, left, dx);
 		}
+		/**
+		 * 水平可拖拽的距离范围
+		 */
 		@Override
 		public int getViewHorizontalDragRange(View child) {
-			// TODO Auto-generated method stub
-			return (mViewWebGuide.getWidth() | mViewContent.getWidth());
+			return mViewContent.getWidth();
 		}
+		/**
+		 * 垂直可拖拽的距离范围
+		 */
 		@Override
 		public int getViewVerticalDragRange(View child) {
-			// TODO Auto-generated method stub
 			return mTotalHeight;
 		}
+		/**
+		 * 监听到View位置的变化，完成其他view动画的处理
+		 */
 		@Override
 		public void onViewPositionChanged(View changedView, int left, int top, int dx, int dy) {
 						
@@ -318,7 +317,9 @@ public class UCLinear extends RelativeLayout{
 			float guidedy = dy / (float)(mSearchHeight+mWebGuideHeight-mGuideHeight) * mGuideHeight;
 			mViewGuide.setTranslationY(mViewGuide.getTranslationY() - guidedy);
 			
-			float scale = (float) ((mViewWebGuide.getBottom()-mViewContent.getTop()) /(float)(mSearchHeight+mWebGuideHeight-mGuideHeight));
+			//设置mViewSearch及mViewWebGuide缩放效果
+			float scale = (float) ((mViewWebGuide.getBottom()-mViewContent.getTop()) /
+					(float)(mSearchHeight+mWebGuideHeight-mGuideHeight));
 			mViewSearch.setPivotY(mViewSearch.getTop());
 			mViewSearch.setPivotX(getWidth()/2);
 			mViewSearch.setScaleY(1-scale/10);
@@ -327,27 +328,34 @@ public class UCLinear extends RelativeLayout{
 			mViewWebGuide.setPivotX(getWidth()/2);
 			mViewWebGuide.setScaleY(1-scale/10);
 			mViewWebGuide.setScaleX(1-scale/10);
-			/**
-			 * 设置bottom中各button的效果			
-			 */
-			float alphady = (mViewWebGuide.getBottom() - mViewContent.getTop())/(float)(mSearchHeight+mWebGuideHeight-mGuideHeight);
+			
+			//设置bottom中各button的效果			 
+			float alphady = (mViewWebGuide.getBottom() - mViewContent.getTop())/
+					(float)(mSearchHeight+mWebGuideHeight-mGuideHeight);
 			btnMore.setAlpha(1-alphady);
 			
-			float homedy_tran = dy / (float)(mSearchHeight+mWebGuideHeight-mGuideHeight) * (mViewBottom.getWidth()/2-btnToHome.getWidth()/2);
+			float homedy_tran = dy / (float)(mSearchHeight+mWebGuideHeight-mGuideHeight) * 
+					(mViewBottom.getWidth()/2-btnToHome.getWidth()/2);
 			btnToHome.setTranslationX(btnToHome.getTranslationX() + homedy_tran);
 			
-			float pagedy_tran = dy/(float)(mSearchHeight+mWebGuideHeight-mGuideHeight) *(btnPage.getWidth()/2+btnMore.getWidth()/2);
+			float pagedy_tran = dy/(float)(mSearchHeight+mWebGuideHeight-mGuideHeight) *
+					(btnPage.getWidth()/2+btnMore.getWidth()/2);
 			btnPage.setTranslationX(btnPage.getTranslationX() + pagedy_tran);
 			btnPage.setAlpha(1-alphady);
 			
-			float prevdy_tran = dy / (float)(mSearchHeight+mWebGuideHeight-mGuideHeight) * (mViewBottom.getWidth()/2-btnPrev.getWidth()/2);
+			float prevdy_tran = dy / (float)(mSearchHeight+mWebGuideHeight-mGuideHeight) *
+					(mViewBottom.getWidth()/2-btnPrev.getWidth()/2);
 			btnPrev.setTranslationX(btnPrev.getTranslationX() - prevdy_tran);
 			btnPrev.setAlpha(1-alphady);
 			
-			float nextdy_tran = dy/(float)(mSearchHeight+mWebGuideHeight-mGuideHeight) *(btnNext.getWidth()/2+btnMore.getWidth()/2);
+			float nextdy_tran = dy/(float)(mSearchHeight+mWebGuideHeight-mGuideHeight) *
+					(btnNext.getWidth()/2+btnMore.getWidth()/2);
 			btnNext.setTranslationX(btnNext.getTranslationX() - nextdy_tran);
 			btnNext.setAlpha(1-alphady);
 		}
+		/**
+		 * 释放拖拽后执行，根据mViewContent的拖拽距离决定是否上滑或返回原位
+		 */
 		@Override
 		public void onViewReleased(View releasedChild, float xvel, float yvel) {
 			int movelen = CONTENT_ORI_TOP_LOC - mViewContent.getTop();
