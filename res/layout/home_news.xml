@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" >
+    <!--  <ListView 
+        android:id="@+id/lv_news"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        ></ListView>-->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical" >
+        
+        <TextView 
+            android:id="@+id/uc_content_1"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:background="@drawable/spring"
+            android:textSize="20sp"
+            android:gravity="center"/>
+        
+         <TextView 
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:background="@drawable/summer"
+            android:textSize="20sp"
+            android:gravity="center"/>
+         
+          <TextView 
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:background="@drawable/fall"
+            android:textSize="20sp"
+            android:gravity="center"/>
+          
+           <TextView 
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:textSize="20sp"
+            android:gravity="center"
+            android:background="@drawable/winter"/>
+        
+    </LinearLayout>
+    
+
+</ScrollView>

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="#66cc99"
+    android:orientation="horizontal" >
+    <Button 
+        android:id="@+id/btnPrev"
+        android:background="@drawable/ic_action_previous_item"
+        android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+        android:layout_weight="1"
+        />
+    <Button 
+        android:id="@+id/btnNext"
+        android:background="@drawable/ic_action_next_item"
+        android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+        android:layout_weight="1"
+        />
+    <Button 
+        android:id="@+id/btnMore"
+        android:text="More"
+        android:layout_weight="1"
+        android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+        />
+    <Button 
+        android:id="@+id/btnPage"
+        android:text="Page"
+        android:layout_weight="1"
+        android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+        />
+    <Button 
+        android:id="@+id/btnToHome"
+        android:text="Home"
+        android:layout_weight="1"
+        android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+        />
+    
+
+</LinearLayout>

@@ -1,0 +1,44 @@
+<com.example.ucfirstpage.UCLinear xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/uc_liner"
+    tools:context="com.example.ucfirstpage.MainActivity" >
+    
+     <include 
+        android:id="@+id/uc_guide"
+        android:layout_width="match_parent"
+    	android:layout_height="wrap_content"
+    	android:layout_alignParentTop="true"
+    	layout="@layout/home_guide"
+        />
+      <include 
+        android:id="@+id/uc_search"
+        android:layout_width="match_parent"
+    	android:layout_height="200dp"
+    	android:layout_alignParentTop="true"
+    	layout="@layout/home_search"
+        />
+    <include 
+        android:id="@+id/uc_webguide"
+        android:layout_width="match_parent"
+    	android:layout_height="100dp"
+    	android:layout_below="@+id/uc_search"
+    	layout="@layout/home_webguide"
+        />
+    <include 
+        android:id="@+id/uc_news"
+        android:layout_width="match_parent"
+    	android:layout_height="wrap_content"
+    	android:layout_below="@+id/uc_webguide"
+    	layout="@layout/home_news"
+        />
+    <include 
+        android:id="@+id/uc_bottom"
+        android:layout_width="match_parent"
+    	android:layout_height="wrap_content"
+    	android:layout_alignParentBottom="true"
+    	layout="@layout/home_bottom"
+        />
+
+</com.example.ucfirstpage.UCLinear>
