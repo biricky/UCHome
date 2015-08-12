@@ -26,19 +26,18 @@ import android.widget.TextView;
 public class UCLinear extends RelativeLayout{
 	private static int CONTENT_ORI_TOP_LOC;
 	
-	private boolean isInRange = true; 
+	static boolean isInRange = true; 
 	public boolean isOrigin = true; //是否是初始状态,用于返回判断
 	
 	private ViewDragHelper mDragHelper;
 	private DragHelperCallback mCallBack;
 	private VelocityTracker mVTracker;
 	
-	private int mGuideHeight; //导航栏高度
-	private int mSearchHeight; //搜索栏高度
-	private int mWebGuideHeight; //网站导航高度
-	private int mContentHeight; //内容高度
-	private int mTotalHeight;  //总高度
-	
+	public static int mGuideHeight; //导航栏高度
+	public static int mSearchHeight; //搜索栏高度
+	public static int mWebGuideHeight; //网站导航高度
+	public static int mContentHeight; //内容高度
+	public static int mTotalHeight;  //总高度
 	
 	private View mViewGuide; //导航栏
 	private View mViewSearch; //搜索部分
@@ -82,7 +81,7 @@ public class UCLinear extends RelativeLayout{
 			mViewWebGuide.setScaleY(1);
 			
 			TranslateAnimation btnPrev_ta = new TranslateAnimation(0,-btnPrev.getTranslationX(), 0, 0);
-			btnPrev_ta.setDuration(100);
+			btnPrev_ta.setDuration(150);
 			btnPrev_ta.setFillAfter(true);
 			btnPrev.startAnimation(btnPrev_ta);
 			btnPrev.setAlpha(1);
@@ -104,7 +103,7 @@ public class UCLinear extends RelativeLayout{
 			});
 			
 			TranslateAnimation btnNext_ta = new TranslateAnimation(0,-btnNext.getTranslationX(), 0, 0);
-			btnNext_ta.setDuration(100);
+			btnNext_ta.setDuration(150);
 			btnNext_ta.setFillAfter(true);
 			btnNext.startAnimation(btnNext_ta);
 			btnNext.setAlpha(1);
@@ -126,7 +125,7 @@ public class UCLinear extends RelativeLayout{
 			});
 			
 			TranslateAnimation btnPage_ta = new TranslateAnimation(0,-btnPage.getTranslationX(),  0, 0);
-			btnPage_ta.setDuration(100);
+			btnPage_ta.setDuration(150);
 			btnPage_ta.setFillAfter(true);
 			btnPage.startAnimation(btnPage_ta);
 			btnPage.setAlpha(1);
@@ -149,7 +148,7 @@ public class UCLinear extends RelativeLayout{
 				}
 			});
 			TranslateAnimation btnToHome_ta = new TranslateAnimation(0, -btnToHome.getTranslationX(), 0, 0);
-			btnToHome_ta.setDuration(100); 
+			btnToHome_ta.setDuration(150); 
 			btnToHome_ta.setFillAfter(true);
 			btnToHome.startAnimation(btnToHome_ta);
 			btnToHome_ta.setAnimationListener(new AnimationListener() {
@@ -172,8 +171,58 @@ public class UCLinear extends RelativeLayout{
 			});			
 			btnMore.setAlpha(1);
 			
-			mViewGuide.setTranslationY(-mGuideHeight);
+			TranslateAnimation viewGuide_ta = new TranslateAnimation(0,0,0,-mViewGuide.getHeight());
+			viewGuide_ta.setDuration(150);
+			viewGuide_ta.setFillAfter(true);
+			mViewGuide.setAnimation(viewGuide_ta);
+			viewGuide_ta.setAnimationListener(new AnimationListener() {
+				
+				@Override
+				public void onAnimationStart(Animation animation) {
+					// TODO Auto-generated method stub
+					
+				}
+				
+				@Override
+				public void onAnimationRepeat(Animation animation) {
+					// TODO Auto-generated method stub
+					
+				}
+				
+				@Override
+				public void onAnimationEnd(Animation animation) {
+					mViewGuide.setTranslationY(-mGuideHeight);
+					mViewGuide.clearAnimation();
+					
+				}
+			});
+			
 			mViewContent.setScrollY(-mViewContent.getScrollY());
+			TranslateAnimation viewContent_ta = new TranslateAnimation(0,0,mViewGuide.getHeight()-CONTENT_ORI_TOP_LOC,0);
+			viewContent_ta.setDuration(150);
+			viewContent_ta.setFillAfter(true);
+			mViewContent.setAnimation(viewContent_ta);
+			viewContent_ta.setAnimationListener(new AnimationListener() {
+				
+				@Override
+				public void onAnimationStart(Animation animation) {
+					// TODO Auto-generated method stub
+					
+				}
+				
+				@Override
+				public void onAnimationRepeat(Animation animation) {
+					// TODO Auto-generated method stub
+					
+				}
+				
+				@Override
+				public void onAnimationEnd(Animation animation) {
+					mViewContent.setTranslationY(0);
+					mViewContent.clearAnimation();
+					
+				}
+			});
 			requestLayout();		
 		}
 	}
@@ -262,8 +311,6 @@ public class UCLinear extends RelativeLayout{
 		mViewContent=findViewById(R.id.uc_news);
 		mViewBottom=findViewById(R.id.uc_bottom);
 	}
-	
-	
 	
 	class DragHelperCallback extends ViewDragHelper.Callback {
 
@@ -369,5 +416,21 @@ public class UCLinear extends RelativeLayout{
 				postInvalidate();
 			}
 		}
+	}
+
+	public View getmViewBottom() {
+		return mViewBottom;
+	}
+	public View getmViewContent() {
+		return mViewContent;
+	}
+	public View getmViewGuide() {
+		return mViewGuide;
+	}
+	public View getmViewSearch() {
+		return mViewSearch;
+	}
+	public View getmViewWebGuide() {
+		return mViewWebGuide;
 	}
 }
