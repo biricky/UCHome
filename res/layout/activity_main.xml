@@ -40,5 +40,12 @@
     	android:layout_alignParentBottom="true"
     	layout="@layout/home_bottom"
         />
+    <include 
+        android:id="@+id/uc_second"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_toRightOf="@+id/uc_news"
+        layout="@layout/home_second"
+        />
 
 </com.example.ucfirstpage.UCLinear>
