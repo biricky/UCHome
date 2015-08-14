@@ -28,7 +28,7 @@ public class UCLinear extends RelativeLayout{
 	
 	static boolean isInRange = true; 
 	public boolean isOrigin = true; //是否是初始状态,用于返回判断
-	
+			
 	private ViewDragHelper mDragHelper;
 	private DragHelperCallback mCallBack;
 	private VelocityTracker mVTracker;
@@ -38,6 +38,8 @@ public class UCLinear extends RelativeLayout{
 	public static int mWebGuideHeight; //网站导航高度
 	public static int mContentHeight; //内容高度
 	public static int mTotalHeight;  //总高度
+	
+	private View mTextViewSearch;   //搜索栏
 	
 	private View mViewGuide; //导航栏
 	private View mViewSearch; //搜索部分
@@ -61,6 +63,7 @@ public class UCLinear extends RelativeLayout{
 				mSearchHeight = mViewSearch.getHeight();
 				mWebGuideHeight = mViewWebGuide.getHeight();
 				mTotalHeight = UCLinear.this.getHeight();
+				
 				mViewGuide.bringToFront();
 				mViewGuide.setTranslationY(-mGuideHeight);
 				UCLinear.this.getViewTreeObserver().removeOnPreDrawListener(this);
@@ -72,7 +75,7 @@ public class UCLinear extends RelativeLayout{
 	public void setBackToOrigin(){
 		if (!isOrigin){
 			isInRange = true;
-			isOrigin = true; 
+			isOrigin = true; 			
 			
 			mViewSearch.setScaleX(1);
 			mViewSearch.setScaleY(1);
@@ -313,12 +316,12 @@ public class UCLinear extends RelativeLayout{
 	}
 	
 	class DragHelperCallback extends ViewDragHelper.Callback {
-
 		/**
 		 * 设置mViewContent可拖拽
 		 */
 		@Override
 		public boolean tryCaptureView(View arg0, int arg1) {
+			Log.e("RRR", ">>>tryCaptureView");
 			if (mDragHelper.continueSettling(true))
 				return false;
 			return mViewContent == arg0 && isInRange;
@@ -328,38 +331,42 @@ public class UCLinear extends RelativeLayout{
 		 */
 		@Override
 		public int clampViewPositionVertical(View child, int top, int dy) {
+			Log.e("RRR", ">>>clampViewPositionVertical");
 			int topBound = mGuideHeight;
 			int bottomBound = mViewWebGuide.getBottom();
 			int newTop = Math.min(Math.max(top, topBound), bottomBound);		
 			return newTop;
 		}
 		/**
-		 * 水平拖拽的处理
-		 */
-		@Override
-		public int clampViewPositionHorizontal(View child, int left, int dx) {
-			return super.clampViewPositionHorizontal(child, left, dx);
-		}
-		/**
 		 * 水平可拖拽的距离范围
 		 */
 		@Override
 		public int getViewHorizontalDragRange(View child) {
-			return mViewContent.getWidth();
+			return 0;
 		}
 		/**
 		 * 垂直可拖拽的距离范围
 		 */
 		@Override
 		public int getViewVerticalDragRange(View child) {
-			return mTotalHeight;
+			return (mTotalHeight-mViewBottom.getWidth());
 		}
 		/**
 		 * 监听到View位置的变化，完成其他view动画的处理
 		 */
 		@Override
-		public void onViewPositionChanged(View changedView, int left, int top, int dx, int dy) {
-						
+		public void onViewPositionChanged(View changedView, int left, int top, int dx, int dy) {	
+			SlideUpHandler(changedView, left, top, dx, dy);		
+		}
+		/**
+		 * 上滑动作处理函数
+		 * @param changedView : the same as onViewPositionChanged
+		 * @param left ：the same as onViewPositionChanged
+		 * @param top ：the same as onViewPositionChanged
+		 * @param dx : the same as onViewPositionChanged
+		 * @param dy : the same as onViewPositionChanged
+		 */
+		public void SlideUpHandler(View changedView, int left, int top, int dx, int dy) {
 			//获取导航栏相对手指移动的相对距离
 			float guidedy = dy / (float)(mSearchHeight+mWebGuideHeight-mGuideHeight) * mGuideHeight;
 			mViewGuide.setTranslationY(mViewGuide.getTranslationY() - guidedy);
@@ -400,37 +407,22 @@ public class UCLinear extends RelativeLayout{
 			btnNext.setTranslationX(btnNext.getTranslationX() - nextdy_tran);
 			btnNext.setAlpha(1-alphady);
 		}
+				
 		/**
 		 * 释放拖拽后执行，根据mViewContent的拖拽距离决定是否上滑或返回原位
 		 */
 		@Override
 		public void onViewReleased(View releasedChild, float xvel, float yvel) {
-			int movelen = CONTENT_ORI_TOP_LOC - mViewContent.getTop();
-			if (movelen > mWebGuideHeight){
-				isInRange = false;
-				isOrigin = false;
-				mDragHelper.settleCapturedViewAt(0, mGuideHeight);
-				postInvalidate();
-			}else {
-				mDragHelper.settleCapturedViewAt(0, CONTENT_ORI_TOP_LOC);
-				postInvalidate();
-			}
+				int movelen_Y = CONTENT_ORI_TOP_LOC - mViewContent.getTop();
+				if (movelen_Y > mWebGuideHeight){
+					isInRange = false;
+					isOrigin = false;
+					mDragHelper.settleCapturedViewAt(0, mGuideHeight);
+					postInvalidate();
+				}else {
+					mDragHelper.settleCapturedViewAt(0, CONTENT_ORI_TOP_LOC);
+					postInvalidate();
+				}
 		}
-	}
-
-	public View getmViewBottom() {
-		return mViewBottom;
-	}
-	public View getmViewContent() {
-		return mViewContent;
-	}
-	public View getmViewGuide() {
-		return mViewGuide;
-	}
-	public View getmViewSearch() {
-		return mViewSearch;
-	}
-	public View getmViewWebGuide() {
-		return mViewWebGuide;
 	}
 }
