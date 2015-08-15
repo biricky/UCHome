@@ -2,6 +2,7 @@ package com.example.ucfirstpage;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -21,19 +22,28 @@ public class MainActivity extends Activity {
 		btnHome.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				if (!ucView.isOrigin) {
-					ucView.setBackToOrigin();
-				}else {	
+				if (ucView.isOrigin && ucView.isOrigin_left){
 				}
+				if (!ucView.isOrigin_left) {
+					ucView.setBackToOrigin_Horizontal();
+				}
+				if (!ucView.isOrigin ) {
+					ucView.setBackToOrigin();
+				} 
 			}
 		});
 	}
 	@Override
 	public void onBackPressed() {
-		if (!ucView.isOrigin) {
-			ucView.setBackToOrigin();
-		}else {
+		if (ucView.isOrigin && ucView.isOrigin_left){
 			super.onBackPressed();
 		}
-	}		
-}
+		if (!ucView.isOrigin_left) {
+			ucView.setBackToOrigin_Horizontal();
+		}
+		if (!ucView.isOrigin ) {
+			ucView.setBackToOrigin();
+		} 
+
+	}
+}		

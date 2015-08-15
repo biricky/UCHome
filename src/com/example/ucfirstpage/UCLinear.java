@@ -1,5 +1,7 @@
 package com.example.ucfirstpage;
 
+import java.text.Format;
+
 import android.R.bool;
 import android.R.integer;
 import android.content.Context;
@@ -28,6 +30,9 @@ public class UCLinear extends RelativeLayout{
 	
 	static boolean isInRange = true; 
 	public boolean isOrigin = true; //是否是初始状态,用于返回判断
+	public boolean isOrigin_left = true; //左滑状态判断
+	public static boolean isEdgeDrag = false; //边界拖拽判断
+	
 			
 	private ViewDragHelper mDragHelper;
 	private DragHelperCallback mCallBack;
@@ -46,6 +51,7 @@ public class UCLinear extends RelativeLayout{
 	private View mViewWebGuide; //网站导航
 	private View mViewContent; //内容
 	private View mViewBottom;//底部导航
+	private View mViewSecond; //第二页
 	
 	//bottom中的五个button
 	private Button btnPrev,btnNext,btnMore,btnPage,btnToHome;
@@ -64,19 +70,73 @@ public class UCLinear extends RelativeLayout{
 				mWebGuideHeight = mViewWebGuide.getHeight();
 				mTotalHeight = UCLinear.this.getHeight();
 				
-				mViewGuide.bringToFront();
 				mViewGuide.setTranslationY(-mGuideHeight);
+				mDragHelper.setEdgeTrackingEnabled(ViewDragHelper.EDGE_RIGHT);
 				UCLinear.this.getViewTreeObserver().removeOnPreDrawListener(this);
+				mViewSecond.bringToFront();
 				return false;
 			}
 		});
+	}
+	@Override
+	protected void onLayout(boolean changed, int l, int t, int r, int b) {
+		mViewGuide.layout(
+				0, 
+				0, 
+				mViewGuide.getMeasuredWidth(), 
+				mViewGuide.getMeasuredHeight());
+		mViewSearch.layout(
+				0, 
+				0, 
+				mViewSearch.getMeasuredWidth(), 
+				mViewSearch.getMeasuredHeight());
+		mViewWebGuide.layout(
+				0, 
+				mViewSearch.getMeasuredHeight(),
+				mViewWebGuide.getMeasuredWidth(), 
+				mViewSearch.getMeasuredHeight()+mViewWebGuide.getMeasuredHeight());
+		mViewBottom.layout(
+				0, 
+				getMeasuredHeight()-mViewBottom.getMeasuredHeight(), 
+				mViewBottom.getMeasuredWidth(),
+				getMeasuredHeight());
+		mViewContent.layout(
+				0, 
+				mViewWebGuide.getMeasuredHeight()+mViewSearch.getMeasuredHeight(), 
+				getMeasuredWidth(),
+				mViewWebGuide.getMeasuredHeight()+mViewSearch.getMeasuredHeight()+
+							getMeasuredHeight()-mViewGuide.getMeasuredHeight()-
+							mViewBottom.getMeasuredHeight());
+		
+		mViewSecond.layout(
+				getMeasuredWidth(), 
+				0, 
+				getMeasuredWidth()*2, 
+				getMeasuredHeight()-mViewBottom.getMeasuredHeight());
+	}
+	
+	public void initButton(){
+		btnPrev = (Button) findViewById(R.id.btnPrev);
+		btnNext = (Button) findViewById(R.id.btnNext);
+		btnMore = (Button) findViewById(R.id.btnMore);
+		btnPage = (Button) findViewById(R.id.btnPage);
+		btnToHome = (Button) findViewById(R.id.btnToHome);
+	}
+	@Override
+	protected void onFinishInflate() {
+		initButton();
+		mViewGuide= findViewById(R.id.uc_guide);
+		mViewSearch=findViewById(R.id.uc_search);
+		mViewWebGuide=findViewById(R.id.uc_webguide);
+		mViewContent=findViewById(R.id.uc_news);
+		mViewBottom=findViewById(R.id.uc_bottom);
+		mViewSecond=findViewById(R.id.uc_second);
 	}
 
 	public void setBackToOrigin(){
 		if (!isOrigin){
 			isInRange = true;
 			isOrigin = true; 			
-			
 			mViewSearch.setScaleX(1);
 			mViewSearch.setScaleY(1);
 			
@@ -226,12 +286,53 @@ public class UCLinear extends RelativeLayout{
 					
 				}
 			});
+			
 			requestLayout();		
 		}
+
+	}
+	public void setBackToOrigin_Horizontal(){
+		isOrigin_left = true;
+		isEdgeDrag = false;
+
+		TranslateAnimation view_ta = new TranslateAnimation(-mViewSecond.getTranslationX()-mViewSecond.getWidth(), -mViewSecond.getTranslationX(),0,0);
+		view_ta.setDuration(250);
+		view_ta.setFillAfter(true);
+		mViewContent.setAnimation(view_ta);
+		mViewSearch.setAnimation(view_ta);
+		mViewWebGuide.setAnimation(view_ta);
+		mViewSecond.setAnimation(view_ta);
+		view_ta.setAnimationListener(new AnimationListener() {
+
+			@Override
+			public void onAnimationStart(Animation animation) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void onAnimationRepeat(Animation animation) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void onAnimationEnd(Animation animation) {
+				mViewContent.setTranslationX(0);
+				mViewSearch.setTranslationX(0);
+				mViewWebGuide.setTranslationX(0);
+				mViewSecond.setTranslationX(0);
+				mViewContent.clearAnimation();
+				mViewSearch.clearAnimation();
+				mViewWebGuide.clearAnimation();
+				mViewSecond.clearAnimation();
+			}
+		});
+		requestLayout();
 	}
 	//计算拖动速度
 	@Override
-	public void computeScroll() {
+	public void computeScroll() {                     
 		if(mDragHelper.continueSettling(true)) {
 			ViewCompat.postInvalidateOnAnimation(this);
 		}
@@ -264,66 +365,100 @@ public class UCLinear extends RelativeLayout{
 	}
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
-		mDragHelper.processTouchEvent(event);
+		if (!isEdgeDrag){
+			mDragHelper.processTouchEvent(event);
+		}
+		else {
+			if (event.getAction() == MotionEvent.ACTION_MOVE) {
+				mViewSecond.setTranslationX(event.getX()-getWidth());
+				mViewWebGuide.setTranslationX(event.getX()-getWidth());
+				mViewContent.setTranslationX(event.getX()-getWidth());
+				mViewSearch.setTranslationX(event.getX()-getWidth());
+			}
+			if(event.getAction() == MotionEvent.ACTION_UP) {
+				if (getWidth()-event.getX() > getWidth()/3) {
+					isOrigin_left = false;
+					mDragHelper.smoothSlideViewTo(mViewContent, (int) (mViewContent.getX()-getWidth()), 0);
+					mDragHelper.smoothSlideViewTo(mViewWebGuide,(int) (mViewWebGuide.getX()-getWidth()), 0);
+					mDragHelper.smoothSlideViewTo(mViewSearch, (int) (mViewSearch.getX()-getWidth()), 0);
+					mDragHelper.smoothSlideViewTo(mViewSecond, (int) (getWidth() - mViewSecond.getX()), 0);
+					postInvalidate();
+					
+				}else {
+					isOrigin_left = true;
+					TranslateAnimation view_ta = new TranslateAnimation(0, -mViewContent.getTranslationX(), 0, 0);
+					view_ta.setDuration(200);
+					view_ta.setFillAfter(true);
+					mViewContent.setAnimation(view_ta);
+					mViewWebGuide.setAnimation(view_ta);
+					mViewSearch.setAnimation(view_ta);
+					TranslateAnimation viewSecond_ta = new TranslateAnimation(0,-mViewSecond.getTranslationX(),0,0);
+					viewSecond_ta.setDuration(200);
+					viewSecond_ta.setFillAfter(true);
+					mViewSecond.setAnimation(viewSecond_ta);
+					view_ta.setAnimationListener(new AnimationListener() {
+						
+						@Override
+						public void onAnimationStart(Animation animation) {
+							// TODO Auto-generated method stub
+							
+						}
+						
+						@Override
+						public void onAnimationRepeat(Animation animation) {
+							// TODO Auto-generated method stub
+							
+						}
+						
+						@Override
+						public void onAnimationEnd(Animation animation) {
+							mViewContent.setTranslationX(0);
+							mViewWebGuide.setTranslationX(0);
+							mViewSearch.setTranslationX(0);
+							mViewContent.clearAnimation();
+							mViewWebGuide.clearAnimation();
+							mViewSearch.clearAnimation();
+						}
+					});
+					viewSecond_ta.setAnimationListener(new AnimationListener() {
+						
+						@Override
+						public void onAnimationStart(Animation animation) {
+							// TODO Auto-generated method stub
+							
+						}
+						
+						@Override
+						public void onAnimationRepeat(Animation animation) {
+							// TODO Auto-generated method stub
+							
+						}
+						
+						@Override
+						public void onAnimationEnd(Animation animation) {
+							mViewSecond.setTranslationX(0);
+							mViewSecond.clearAnimation();	
+						}
+					});
+					requestLayout();
+					mDragHelper.smoothSlideViewTo(mViewContent, 0, CONTENT_ORI_TOP_LOC);
+					postInvalidate();
+					isEdgeDrag = false;
+				}
+			}
+		}
 		return false;
 	}
-	@Override
-	protected void onLayout(boolean changed, int l, int t, int r, int b) {
-		mViewGuide.layout(
-				0, 
-				0, 
-				mViewGuide.getMeasuredWidth(), 
-				mViewGuide.getMeasuredHeight());
-		mViewSearch.layout(
-				0, 
-				0, 
-				mViewSearch.getMeasuredWidth(), 
-				mViewSearch.getMeasuredHeight());
-		mViewWebGuide.layout(
-				0, 
-				mViewSearch.getMeasuredHeight(),
-				mViewWebGuide.getMeasuredWidth(), 
-				mViewSearch.getMeasuredHeight()+mViewWebGuide.getMeasuredHeight());
-		mViewBottom.layout(
-				0, 
-				getMeasuredHeight()-mViewBottom.getMeasuredHeight(), 
-				mViewBottom.getMeasuredWidth(),
-				getMeasuredHeight());
-		mViewContent.layout(
-				0, 
-				mViewWebGuide.getMeasuredHeight()+mViewSearch.getMeasuredHeight(), 
-				mViewContent.getMeasuredWidth(),
-				mViewWebGuide.getMeasuredHeight()+mViewSearch.getMeasuredHeight()+
-							getMeasuredHeight()-mViewGuide.getMeasuredHeight()-
-							mViewBottom.getMeasuredHeight());
-	}
-	
-	public void initButton(){
-		btnPrev = (Button) findViewById(R.id.btnPrev);
-		btnNext = (Button) findViewById(R.id.btnNext);
-		btnMore = (Button) findViewById(R.id.btnMore);
-		btnPage = (Button) findViewById(R.id.btnPage);
-		btnToHome = (Button) findViewById(R.id.btnToHome);
-	}
-	@Override
-	protected void onFinishInflate() {
-		initButton();
-		mViewGuide= findViewById(R.id.uc_guide);
-		mViewSearch=findViewById(R.id.uc_search);
-		mViewWebGuide=findViewById(R.id.uc_webguide);
-		mViewContent=findViewById(R.id.uc_news);
-		mViewBottom=findViewById(R.id.uc_bottom);
-	}
-	
+
 	class DragHelperCallback extends ViewDragHelper.Callback {
 		/**
 		 * 设置mViewContent可拖拽
 		 */
 		@Override
 		public boolean tryCaptureView(View arg0, int arg1) {
-			Log.e("RRR", ">>>tryCaptureView");
-			if (mDragHelper.continueSettling(true))
+			if (mDragHelper.continueSettling(true)) {
 				return false;
+			}
 			return mViewContent == arg0 && isInRange;
 		}
 		/**
@@ -331,7 +466,6 @@ public class UCLinear extends RelativeLayout{
 		 */
 		@Override
 		public int clampViewPositionVertical(View child, int top, int dy) {
-			Log.e("RRR", ">>>clampViewPositionVertical");
 			int topBound = mGuideHeight;
 			int bottomBound = mViewWebGuide.getBottom();
 			int newTop = Math.min(Math.max(top, topBound), bottomBound);		
@@ -355,7 +489,7 @@ public class UCLinear extends RelativeLayout{
 		 * 监听到View位置的变化，完成其他view动画的处理
 		 */
 		@Override
-		public void onViewPositionChanged(View changedView, int left, int top, int dx, int dy) {	
+		public void onViewPositionChanged(View changedView, int left, int top, int dx, int dy) {
 			SlideUpHandler(changedView, left, top, dx, dy);		
 		}
 		/**
@@ -423,6 +557,16 @@ public class UCLinear extends RelativeLayout{
 					mDragHelper.settleCapturedViewAt(0, CONTENT_ORI_TOP_LOC);
 					postInvalidate();
 				}
+		}
+		@Override
+		public void onEdgeDragStarted(int edgeFlags, int pointerId) {
+			mDragHelper.captureChildView(mViewContent, pointerId);
+			isEdgeDrag = true;
+		}
+		@Override
+		public void onEdgeTouched(int edgeFlags, int pointerId) {
+			super.onEdgeTouched(edgeFlags, pointerId);
+			
 		}
 	}
 }
