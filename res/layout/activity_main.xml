@@ -23,28 +23,24 @@
         android:id="@+id/uc_webguide"
         android:layout_width="match_parent"
     	android:layout_height="100dp"
-    	android:layout_below="@+id/uc_search"
     	layout="@layout/home_webguide"
         />
     <include 
         android:id="@+id/uc_news"
         android:layout_width="match_parent"
     	android:layout_height="wrap_content"
-    	android:layout_below="@+id/uc_webguide"
     	layout="@layout/home_news"
         />
     <include 
         android:id="@+id/uc_bottom"
         android:layout_width="match_parent"
     	android:layout_height="wrap_content"
-    	android:layout_alignParentBottom="true"
     	layout="@layout/home_bottom"
         />
     <include 
         android:id="@+id/uc_second"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_toRightOf="@+id/uc_news"
         layout="@layout/home_second"
         />
 
