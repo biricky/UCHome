@@ -18,12 +18,14 @@ import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.view.animation.Animation.AnimationListener;
 import android.view.animation.AnimationSet;
+import android.view.animation.ScaleAnimation;
 import android.view.animation.TranslateAnimation;
 import android.widget.AdapterViewAnimator;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class UCLinear extends RelativeLayout{
 	private static int CONTENT_ORI_TOP_LOC;
@@ -32,6 +34,7 @@ public class UCLinear extends RelativeLayout{
 	public boolean isOrigin = true; //是否是初始状态,用于返回判断
 	public boolean isOrigin_left = true; //左滑状态判断
 	public static boolean isEdgeDrag = false; //边界拖拽判断
+	public boolean isDragEdgeOnRight = true; //viewContent的右边在屏幕的右边：true;在屏幕的左边：false
 	
 			
 	private ViewDragHelper mDragHelper;
@@ -52,6 +55,7 @@ public class UCLinear extends RelativeLayout{
 	private View mViewContent; //内容
 	private View mViewBottom;//底部导航
 	private View mViewSecond; //第二页
+	private TextView mTextViewinputSearch; //搜索栏
 	
 	//bottom中的五个button
 	private Button btnPrev,btnNext,btnMore,btnPage,btnToHome;
@@ -74,6 +78,7 @@ public class UCLinear extends RelativeLayout{
 				mDragHelper.setEdgeTrackingEnabled(ViewDragHelper.EDGE_RIGHT);
 				UCLinear.this.getViewTreeObserver().removeOnPreDrawListener(this);
 				mViewSecond.bringToFront();
+				
 				return false;
 			}
 		});
@@ -110,7 +115,7 @@ public class UCLinear extends RelativeLayout{
 		
 		mViewSecond.layout(
 				getMeasuredWidth(), 
-				0, 
+				mViewGuide.getBottom(), 
 				getMeasuredWidth()*2, 
 				getMeasuredHeight()-mViewBottom.getMeasuredHeight());
 	}
@@ -131,6 +136,7 @@ public class UCLinear extends RelativeLayout{
 		mViewContent=findViewById(R.id.uc_news);
 		mViewBottom=findViewById(R.id.uc_bottom);
 		mViewSecond=findViewById(R.id.uc_second);
+		mTextViewinputSearch = (TextView) findViewById(R.id.input_search);
 	}
 
 	public void setBackToOrigin(){
@@ -292,40 +298,90 @@ public class UCLinear extends RelativeLayout{
 
 	}
 	public void setBackToOrigin_Horizontal(){
+		mViewGuide.bringToFront();
+		mViewContent.bringToFront();
+		mViewBottom.bringToFront();
 		isOrigin_left = true;
 		isEdgeDrag = false;
-
+		isDragEdgeOnRight = true;
+		
 		TranslateAnimation view_ta = new TranslateAnimation(-mViewSecond.getTranslationX()-mViewSecond.getWidth(), -mViewSecond.getTranslationX(),0,0);
 		view_ta.setDuration(250);
 		view_ta.setFillAfter(true);
 		mViewContent.setAnimation(view_ta);
-		mViewSearch.setAnimation(view_ta);
 		mViewWebGuide.setAnimation(view_ta);
 		mViewSecond.setAnimation(view_ta);
 		view_ta.setAnimationListener(new AnimationListener() {
 
 			@Override
 			public void onAnimationStart(Animation animation) {
-				// TODO Auto-generated method stub
 
 			}
 
 			@Override
 			public void onAnimationRepeat(Animation animation) {
-				// TODO Auto-generated method stub
 
 			}
 
 			@Override
 			public void onAnimationEnd(Animation animation) {
 				mViewContent.setTranslationX(0);
-				mViewSearch.setTranslationX(0);
 				mViewWebGuide.setTranslationX(0);
 				mViewSecond.setTranslationX(0);
 				mViewContent.clearAnimation();
-				mViewSearch.clearAnimation();
 				mViewWebGuide.clearAnimation();
 				mViewSecond.clearAnimation();
+			}
+		});
+		
+		TranslateAnimation viewsearch_ta = new TranslateAnimation(0, 0, 0, -mViewSearch.getTranslationY());
+		viewsearch_ta.setDuration(250);
+		viewsearch_ta.setFillAfter(true);
+		mViewSearch.setAnimation(viewsearch_ta);
+		viewsearch_ta.setAnimationListener(new AnimationListener() {
+			
+			@Override
+			public void onAnimationStart(Animation animation) {
+				
+			}
+			
+			@Override
+			public void onAnimationRepeat(Animation animation) {
+				
+			}
+			
+			@Override
+			public void onAnimationEnd(Animation animation) {
+				mViewSearch.setScaleX(1);
+				mViewSearch.setScaleY(1);
+				mViewSearch.setTranslationY(0);
+				mViewSearch.clearAnimation();		
+			}
+		});
+		Animation textview_ta = new TranslateAnimation(0,0,0,-mTextViewinputSearch.getTranslationY());
+		textview_ta.setFillAfter(true);
+		textview_ta.setDuration(250);
+		mTextViewinputSearch.setAnimation(textview_ta);
+		mTextViewinputSearch.setScaleX(1.0f);
+		mTextViewinputSearch.setScaleY(1.0f);
+		textview_ta.setAnimationListener(new AnimationListener() {
+			
+			@Override
+			public void onAnimationStart(Animation animation) {
+				
+			}
+			
+			@Override
+			public void onAnimationRepeat(Animation animation) {
+				
+			}
+			
+			@Override
+			public void onAnimationEnd(Animation animation) {
+				mTextViewinputSearch.setScaleX(1);
+				mTextViewinputSearch.setScaleY(1);
+				mTextViewinputSearch.setTranslationY(0);	
+				mTextViewinputSearch.clearAnimation();
 			}
 		});
 		requestLayout();
@@ -369,29 +425,110 @@ public class UCLinear extends RelativeLayout{
 			mDragHelper.processTouchEvent(event);
 		}
 		else {
+			float search_len = mSearchHeight-mGuideHeight;
+			float searchview_len = mSearchHeight/2-mTextViewinputSearch.getHeight();
 			if (event.getAction() == MotionEvent.ACTION_MOVE) {
-				mViewSecond.setTranslationX(event.getX()-getWidth());
-				mViewWebGuide.setTranslationX(event.getX()-getWidth());
-				mViewContent.setTranslationX(event.getX()-getWidth());
-				mViewSearch.setTranslationX(event.getX()-getWidth());
+				float dx = event.getX();
+				float dy = event.getX()/getWidth();
+				float scale_dy = (getWidth()-event.getX())/getWidth();
+				
+				mViewSecond.bringToFront();
+				mViewSearch.bringToFront();
+				
+				mViewSecond.setTranslationX(dx-getWidth());
+				mViewSearch.setTranslationY(dy*search_len-search_len);
+				
+				mTextViewinputSearch.setTranslationY(searchview_len-dy*searchview_len);
+				mTextViewinputSearch.setPivotX(getMeasuredWidth()/2);
+				mTextViewinputSearch.setPivotY(mViewGuide.getTop());
+				mTextViewinputSearch.setScaleX((1+scale_dy*0.2f));
+				mTextViewinputSearch.setScaleY((1+scale_dy*0.1f));
+				
+				mViewWebGuide.setTranslationX(dx-getWidth());
+				mViewContent.setTranslationX(dx-getWidth());
+				if (!isDragEdgeOnRight) {
+					setBackToOrigin_Horizontal();
+				}
 			}
 			if(event.getAction() == MotionEvent.ACTION_UP) {
 				if (getWidth()-event.getX() > getWidth()/3) {
 					isOrigin_left = false;
-					mDragHelper.smoothSlideViewTo(mViewContent, (int) (mViewContent.getX()-getWidth()), 0);
-					mDragHelper.smoothSlideViewTo(mViewWebGuide,(int) (mViewWebGuide.getX()-getWidth()), 0);
-					mDragHelper.smoothSlideViewTo(mViewSearch, (int) (mViewSearch.getX()-getWidth()), 0);
-					mDragHelper.smoothSlideViewTo(mViewSecond, (int) (getWidth() - mViewSecond.getX()), 0);
+					isDragEdgeOnRight = false;
+
+				    TranslateAnimation textview_ta = new TranslateAnimation(0, 0, 0, searchview_len-mTextViewinputSearch.getTranslationY());
+				    textview_ta.setDuration(250);
+				    textview_ta.setFillAfter(true);
+				    mTextViewinputSearch.startAnimation(textview_ta);
+				    TranslateAnimation viewsearch_ta = new TranslateAnimation(0, 0, 0, -search_len-mViewSearch.getTranslationY());
+				    viewsearch_ta.setDuration(250);
+				    viewsearch_ta.setFillAfter(true);  
+				    mViewSearch.startAnimation(viewsearch_ta);
+				    requestLayout();
+				    
+				    TranslateAnimation viewContent_ta = new TranslateAnimation(0, mViewContent.getX(), 0, 0);
+				    viewContent_ta.setDuration(350);
+				    viewContent_ta.setFillAfter(true);
+				    mViewWebGuide.setAnimation(viewContent_ta);
+				    mViewContent.setAnimation(viewContent_ta);
+
+					mDragHelper.smoothSlideViewTo(mViewSecond, (int) (getWidth() - mViewSecond.getX()), mViewGuide.getBottom());
 					postInvalidate();
 					
 				}else {
 					isOrigin_left = true;
+					isDragEdgeOnRight = true;
+					
 					TranslateAnimation view_ta = new TranslateAnimation(0, -mViewContent.getTranslationX(), 0, 0);
 					view_ta.setDuration(200);
 					view_ta.setFillAfter(true);
 					mViewContent.setAnimation(view_ta);
 					mViewWebGuide.setAnimation(view_ta);
-					mViewSearch.setAnimation(view_ta);
+					TranslateAnimation viewsearch_ta = new TranslateAnimation(0,0, 0,-mViewSearch.getTranslationY());
+					viewsearch_ta.setDuration(200);
+					viewsearch_ta.setFillAfter(true);
+					mViewSearch.setAnimation(viewsearch_ta);
+					viewsearch_ta.setAnimationListener(new AnimationListener() {
+						
+						@Override
+						public void onAnimationStart(Animation animation) {
+							
+						}
+						
+						@Override
+						public void onAnimationRepeat(Animation animation) {
+							
+						}
+						
+						@Override
+						public void onAnimationEnd(Animation animation) {
+							mViewSearch.setTranslationY(0);
+							mViewSearch.clearAnimation();
+						}
+					});
+					
+					ScaleAnimation scale = new ScaleAnimation(mViewSearch.getScaleX(), 1, mViewSearch.getScaleY(), 1);
+					scale.setDuration(200);
+					scale.setFillAfter(true);
+					mTextViewinputSearch.setAnimation(scale);
+					scale.setAnimationListener(new AnimationListener() {
+						
+						@Override
+						public void onAnimationStart(Animation animation) {
+							
+						}
+						
+						@Override
+						public void onAnimationRepeat(Animation animation) {
+							
+						}
+						
+						@Override
+						public void onAnimationEnd(Animation animation) {
+							mTextViewinputSearch.clearAnimation();
+							
+						}
+					});
+				
 					TranslateAnimation viewSecond_ta = new TranslateAnimation(0,-mViewSecond.getTranslationX(),0,0);
 					viewSecond_ta.setDuration(200);
 					viewSecond_ta.setFillAfter(true);
@@ -400,13 +537,11 @@ public class UCLinear extends RelativeLayout{
 						
 						@Override
 						public void onAnimationStart(Animation animation) {
-							// TODO Auto-generated method stub
 							
 						}
 						
 						@Override
 						public void onAnimationRepeat(Animation animation) {
-							// TODO Auto-generated method stub
 							
 						}
 						
@@ -424,13 +559,11 @@ public class UCLinear extends RelativeLayout{
 						
 						@Override
 						public void onAnimationStart(Animation animation) {
-							// TODO Auto-generated method stub
 							
 						}
 						
 						@Override
 						public void onAnimationRepeat(Animation animation) {
-							// TODO Auto-generated method stub
 							
 						}
 						
@@ -441,9 +574,14 @@ public class UCLinear extends RelativeLayout{
 						}
 					});
 					requestLayout();
+					
 					mDragHelper.smoothSlideViewTo(mViewContent, 0, CONTENT_ORI_TOP_LOC);
 					postInvalidate();
+					
 					isEdgeDrag = false;
+					mViewGuide.bringToFront();
+					mViewContent.bringToFront();
+					mViewBottom.bringToFront();
 				}
 			}
 		}

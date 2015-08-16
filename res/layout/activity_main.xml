@@ -16,9 +16,9 @@
         android:id="@+id/uc_search"
         android:layout_width="match_parent"
     	android:layout_height="200dp"
-    	android:layout_alignParentTop="true"
     	layout="@layout/home_search"
         />
+      <!-- android:layout_alignParentTop="true" -->
     <include 
         android:id="@+id/uc_webguide"
         android:layout_width="match_parent"
