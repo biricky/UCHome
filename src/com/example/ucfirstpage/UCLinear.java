@@ -35,6 +35,7 @@ public class UCLinear extends RelativeLayout{
 	public boolean isOrigin_left = true; //左滑状态判断
 	public static boolean isEdgeDrag = false; //边界拖拽判断
 	public boolean isDragEdgeOnRight = true; //viewContent的右边在屏幕的右边：true;在屏幕的左边：false
+	public boolean isShowNews = false; 
 	
 			
 	private ViewDragHelper mDragHelper;
@@ -46,6 +47,9 @@ public class UCLinear extends RelativeLayout{
 	public static int mWebGuideHeight; //网站导航高度
 	public static int mContentHeight; //内容高度
 	public static int mTotalHeight;  //总高度
+	public static int mTextViewHeight;//搜索栏高度
+	public static float search_len;
+	public static float searchview_len;
 	
 	private View mTextViewSearch;   //搜索栏
 	
@@ -73,11 +77,15 @@ public class UCLinear extends RelativeLayout{
 				mSearchHeight = mViewSearch.getHeight();
 				mWebGuideHeight = mViewWebGuide.getHeight();
 				mTotalHeight = UCLinear.this.getHeight();
+				mTextViewHeight = mTextViewinputSearch.getHeight();
+				search_len = mSearchHeight-mGuideHeight;
+				searchview_len = mSearchHeight/2-mTextViewHeight;
 				
 				mViewGuide.setTranslationY(-mGuideHeight);
 				mDragHelper.setEdgeTrackingEnabled(ViewDragHelper.EDGE_RIGHT);
 				UCLinear.this.getViewTreeObserver().removeOnPreDrawListener(this);
 				mViewSecond.bringToFront();
+				mViewGuide.bringToFront();
 				
 				return false;
 			}
@@ -142,7 +150,9 @@ public class UCLinear extends RelativeLayout{
 	public void setBackToOrigin(){
 		if (!isOrigin){
 			isInRange = true;
-			isOrigin = true; 			
+			isOrigin = true; 
+			isShowNews = false;
+			
 			mViewSearch.setScaleX(1);
 			mViewSearch.setScaleY(1);
 			
@@ -409,6 +419,7 @@ public class UCLinear extends RelativeLayout{
 				
 				isInRange = false;
 				isOrigin = false;
+				isShowNews = true;
 				
 				return false;			
 			}
@@ -419,171 +430,186 @@ public class UCLinear extends RelativeLayout{
 		}
 		return mDragHelper.shouldInterceptTouchEvent(ev);
 	}
+	
+	public void SlideWithHand(MotionEvent event){
+		if (!isShowNews) {
+			float dx = event.getX();
+			float dy = event.getX()/getWidth();
+			float scale_dy = (getWidth()-event.getX())/getWidth();
+
+			mViewSecond.bringToFront();
+			mViewSearch.bringToFront();
+
+			mViewSecond.setTranslationX(dx-getWidth());
+			mViewSearch.setTranslationY(dy*search_len-search_len);
+
+			mTextViewinputSearch.setTranslationY(searchview_len-dy*searchview_len);
+			mTextViewinputSearch.setPivotX(getMeasuredWidth()/2);
+			mTextViewinputSearch.setPivotY(mViewGuide.getTop());
+			mTextViewinputSearch.setScaleX((1+scale_dy*0.2f));
+			mTextViewinputSearch.setScaleY((1+scale_dy*0.1f));
+
+			mViewWebGuide.setTranslationX(dx-getWidth());
+			mViewContent.setTranslationX(dx-getWidth());
+			if (!isDragEdgeOnRight) {
+				setBackToOrigin_Horizontal();
+			}
+		}
+	}
+	public void SlideToLeftAuto(MotionEvent event){
+		isOrigin_left = false;
+		isDragEdgeOnRight = false;
+
+	    TranslateAnimation textview_ta = new TranslateAnimation(0, 0, 0, searchview_len-mTextViewinputSearch.getTranslationY());
+	    textview_ta.setDuration(250);
+	    textview_ta.setFillAfter(true);
+	    mTextViewinputSearch.startAnimation(textview_ta);
+	    TranslateAnimation viewsearch_ta = new TranslateAnimation(0, 0, 0, -search_len-mViewSearch.getTranslationY());
+	    viewsearch_ta.setDuration(250);
+	    viewsearch_ta.setFillAfter(true);  
+	    mViewSearch.startAnimation(viewsearch_ta);
+	    requestLayout();
+	    
+	    TranslateAnimation viewContent_ta = new TranslateAnimation(0, mViewContent.getX(), 0, 0);
+	    viewContent_ta.setDuration(350);
+	    viewContent_ta.setFillAfter(true);
+	    mViewWebGuide.setAnimation(viewContent_ta);
+	    mViewContent.setAnimation(viewContent_ta);
+
+		mDragHelper.smoothSlideViewTo(mViewSecond, (int) (getWidth() - mViewSecond.getX()), mViewGuide.getBottom());
+		postInvalidate();
+	}
+	public void SlideBackToRight(MotionEvent event) {
+		isOrigin_left = true;
+		isDragEdgeOnRight = true;
+		
+		TranslateAnimation view_ta = new TranslateAnimation(0, -mViewContent.getTranslationX(), 0, 0);
+		view_ta.setDuration(200);
+		view_ta.setFillAfter(true);
+		mViewContent.setAnimation(view_ta);
+		mViewWebGuide.setAnimation(view_ta);
+		TranslateAnimation viewsearch_ta = new TranslateAnimation(0,0, 0,-mViewSearch.getTranslationY());
+		viewsearch_ta.setDuration(200);
+		viewsearch_ta.setFillAfter(true);
+		mViewSearch.setAnimation(viewsearch_ta);
+		viewsearch_ta.setAnimationListener(new AnimationListener() {
+			
+			@Override
+			public void onAnimationStart(Animation animation) {
+				
+			}
+			
+			@Override
+			public void onAnimationRepeat(Animation animation) {
+				
+			}
+			
+			@Override
+			public void onAnimationEnd(Animation animation) {
+				mViewSearch.setTranslationY(0);
+				mViewSearch.clearAnimation();
+			}
+		});
+		
+		ScaleAnimation scale = new ScaleAnimation(mViewSearch.getScaleX(), 1, mViewSearch.getScaleY(), 1);
+		scale.setDuration(200);
+		scale.setFillAfter(true);
+		mTextViewinputSearch.setAnimation(scale);
+		scale.setAnimationListener(new AnimationListener() {
+			
+			@Override
+			public void onAnimationStart(Animation animation) {
+				
+			}
+			
+			@Override
+			public void onAnimationRepeat(Animation animation) {
+				
+			}
+			
+			@Override
+			public void onAnimationEnd(Animation animation) {
+				mTextViewinputSearch.clearAnimation();
+				
+			}
+		});
+	
+		TranslateAnimation viewSecond_ta = new TranslateAnimation(0,-mViewSecond.getTranslationX(),0,0);
+		viewSecond_ta.setDuration(200);
+		viewSecond_ta.setFillAfter(true);
+		mViewSecond.setAnimation(viewSecond_ta);
+		view_ta.setAnimationListener(new AnimationListener() {
+			
+			@Override
+			public void onAnimationStart(Animation animation) {
+				
+			}
+			
+			@Override
+			public void onAnimationRepeat(Animation animation) {
+				
+			}
+			
+			@Override
+			public void onAnimationEnd(Animation animation) {
+				mViewContent.setTranslationX(0);
+				mViewWebGuide.setTranslationX(0);
+				mViewSearch.setTranslationX(0);
+				mViewContent.clearAnimation();
+				mViewWebGuide.clearAnimation();
+				mViewSearch.clearAnimation();
+			}
+		});
+		viewSecond_ta.setAnimationListener(new AnimationListener() {
+			
+			@Override
+			public void onAnimationStart(Animation animation) {
+				
+			}
+			
+			@Override
+			public void onAnimationRepeat(Animation animation) {
+				
+			}
+			
+			@Override
+			public void onAnimationEnd(Animation animation) {
+				mViewSecond.setTranslationX(0);
+				mViewSecond.clearAnimation();	
+			}
+		});
+		requestLayout();
+		
+		mDragHelper.smoothSlideViewTo(mViewContent, 0, CONTENT_ORI_TOP_LOC);
+		postInvalidate();
+		
+		isEdgeDrag = false;
+		mViewGuide.bringToFront();
+		mViewContent.bringToFront();
+		mViewBottom.bringToFront();
+	}
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
 		if (!isEdgeDrag){
 			mDragHelper.processTouchEvent(event);
 		}
 		else {
-			float search_len = mSearchHeight-mGuideHeight;
-			float searchview_len = mSearchHeight/2-mTextViewinputSearch.getHeight();
 			if (event.getAction() == MotionEvent.ACTION_MOVE) {
-				float dx = event.getX();
-				float dy = event.getX()/getWidth();
-				float scale_dy = (getWidth()-event.getX())/getWidth();
-				
-				mViewSecond.bringToFront();
-				mViewSearch.bringToFront();
-				
-				mViewSecond.setTranslationX(dx-getWidth());
-				mViewSearch.setTranslationY(dy*search_len-search_len);
-				
-				mTextViewinputSearch.setTranslationY(searchview_len-dy*searchview_len);
-				mTextViewinputSearch.setPivotX(getMeasuredWidth()/2);
-				mTextViewinputSearch.setPivotY(mViewGuide.getTop());
-				mTextViewinputSearch.setScaleX((1+scale_dy*0.2f));
-				mTextViewinputSearch.setScaleY((1+scale_dy*0.1f));
-				
-				mViewWebGuide.setTranslationX(dx-getWidth());
-				mViewContent.setTranslationX(dx-getWidth());
-				if (!isDragEdgeOnRight) {
-					setBackToOrigin_Horizontal();
-				}
+				SlideWithHand(event);
 			}
 			if(event.getAction() == MotionEvent.ACTION_UP) {
-				if (getWidth()-event.getX() > getWidth()/3) {
-					isOrigin_left = false;
-					isDragEdgeOnRight = false;
-
-				    TranslateAnimation textview_ta = new TranslateAnimation(0, 0, 0, searchview_len-mTextViewinputSearch.getTranslationY());
-				    textview_ta.setDuration(250);
-				    textview_ta.setFillAfter(true);
-				    mTextViewinputSearch.startAnimation(textview_ta);
-				    TranslateAnimation viewsearch_ta = new TranslateAnimation(0, 0, 0, -search_len-mViewSearch.getTranslationY());
-				    viewsearch_ta.setDuration(250);
-				    viewsearch_ta.setFillAfter(true);  
-				    mViewSearch.startAnimation(viewsearch_ta);
-				    requestLayout();
-				    
-				    TranslateAnimation viewContent_ta = new TranslateAnimation(0, mViewContent.getX(), 0, 0);
-				    viewContent_ta.setDuration(350);
-				    viewContent_ta.setFillAfter(true);
-				    mViewWebGuide.setAnimation(viewContent_ta);
-				    mViewContent.setAnimation(viewContent_ta);
-
-					mDragHelper.smoothSlideViewTo(mViewSecond, (int) (getWidth() - mViewSecond.getX()), mViewGuide.getBottom());
-					postInvalidate();
-					
-				}else {
-					isOrigin_left = true;
-					isDragEdgeOnRight = true;
-					
-					TranslateAnimation view_ta = new TranslateAnimation(0, -mViewContent.getTranslationX(), 0, 0);
-					view_ta.setDuration(200);
-					view_ta.setFillAfter(true);
-					mViewContent.setAnimation(view_ta);
-					mViewWebGuide.setAnimation(view_ta);
-					TranslateAnimation viewsearch_ta = new TranslateAnimation(0,0, 0,-mViewSearch.getTranslationY());
-					viewsearch_ta.setDuration(200);
-					viewsearch_ta.setFillAfter(true);
-					mViewSearch.setAnimation(viewsearch_ta);
-					viewsearch_ta.setAnimationListener(new AnimationListener() {
-						
-						@Override
-						public void onAnimationStart(Animation animation) {
-							
-						}
-						
-						@Override
-						public void onAnimationRepeat(Animation animation) {
-							
-						}
-						
-						@Override
-						public void onAnimationEnd(Animation animation) {
-							mViewSearch.setTranslationY(0);
-							mViewSearch.clearAnimation();
-						}
-					});
-					
-					ScaleAnimation scale = new ScaleAnimation(mViewSearch.getScaleX(), 1, mViewSearch.getScaleY(), 1);
-					scale.setDuration(200);
-					scale.setFillAfter(true);
-					mTextViewinputSearch.setAnimation(scale);
-					scale.setAnimationListener(new AnimationListener() {
-						
-						@Override
-						public void onAnimationStart(Animation animation) {
-							
-						}
-						
-						@Override
-						public void onAnimationRepeat(Animation animation) {
-							
-						}
-						
-						@Override
-						public void onAnimationEnd(Animation animation) {
-							mTextViewinputSearch.clearAnimation();
-							
-						}
-					});
-				
-					TranslateAnimation viewSecond_ta = new TranslateAnimation(0,-mViewSecond.getTranslationX(),0,0);
-					viewSecond_ta.setDuration(200);
-					viewSecond_ta.setFillAfter(true);
-					mViewSecond.setAnimation(viewSecond_ta);
-					view_ta.setAnimationListener(new AnimationListener() {
-						
-						@Override
-						public void onAnimationStart(Animation animation) {
-							
-						}
-						
-						@Override
-						public void onAnimationRepeat(Animation animation) {
-							
-						}
-						
-						@Override
-						public void onAnimationEnd(Animation animation) {
-							mViewContent.setTranslationX(0);
-							mViewWebGuide.setTranslationX(0);
-							mViewSearch.setTranslationX(0);
-							mViewContent.clearAnimation();
-							mViewWebGuide.clearAnimation();
-							mViewSearch.clearAnimation();
-						}
-					});
-					viewSecond_ta.setAnimationListener(new AnimationListener() {
-						
-						@Override
-						public void onAnimationStart(Animation animation) {
-							
-						}
-						
-						@Override
-						public void onAnimationRepeat(Animation animation) {
-							
-						}
-						
-						@Override
-						public void onAnimationEnd(Animation animation) {
-							mViewSecond.setTranslationX(0);
-							mViewSecond.clearAnimation();	
-						}
-					});
-					requestLayout();
-					
-					mDragHelper.smoothSlideViewTo(mViewContent, 0, CONTENT_ORI_TOP_LOC);
-					postInvalidate();
-					
-					isEdgeDrag = false;
-					mViewGuide.bringToFront();
-					mViewContent.bringToFront();
-					mViewBottom.bringToFront();
+				if (!isShowNews){
+					if (getWidth()-event.getX() > getWidth()/3) {
+						SlideToLeftAuto(event);
+					}else {
+						SlideBackToRight(event);
+					}
 				}
-			}
+				else {
+					mDragHelper.smoothSlideViewTo(mViewContent, 0, mGuideHeight);
+					return true;
+				}
+			}	
 		}
 		return false;
 	}
@@ -689,6 +715,7 @@ public class UCLinear extends RelativeLayout{
 				if (movelen_Y > mWebGuideHeight){
 					isInRange = false;
 					isOrigin = false;
+					isShowNews = true;
 					mDragHelper.settleCapturedViewAt(0, mGuideHeight);
 					postInvalidate();
 				}else {
@@ -699,7 +726,9 @@ public class UCLinear extends RelativeLayout{
 		@Override
 		public void onEdgeDragStarted(int edgeFlags, int pointerId) {
 			mDragHelper.captureChildView(mViewContent, pointerId);
-			isEdgeDrag = true;
+			if (!isShowNews){
+				isEdgeDrag = true;
+			}	
 		}
 		@Override
 		public void onEdgeTouched(int edgeFlags, int pointerId) {
